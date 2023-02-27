@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>入力時間計測</title>
+    <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        font-family: 'Helvetica Neue', sans-serif;
+        background-color: #F5F5F5;
+        color: #333;
+      }
+      h1 {
+        margin-bottom: 0;
+      }
+      label {
+        font-size: 1.2rem;
+      }
+      input[type="text"] {
+        font-size: 1.2rem;
+        padding: 5px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        margin-right: 10px;
+      }
+      button {
+        font-size: 1.2rem;
+        padding: 10px 20px;
+        border-radius: 5px;
+        background-color: #008CBA;
+        color: white;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+      button:hover {
+        background-color: #00698C;
+      }
+      #time-display, #best-time-display {
+        margin-top: 10px;
+        font-size: 1.5rem;
+        font-weight: bold;
+      }
+      #best-time-display {
+        color: green;
+      }
+      table {
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+      th, td {
+        background-color: #FFF;
+        border: 2px solid #F5F5F5;
+        padding: 10px;
+        text-align: center;
+      }
+      th {
+        background-color: #008CBA;
+        color: white;
+      }
+      tbody tr:nth-child(even) {
+        background-color: #FFF;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>入力時間計測</h1>
+    <div>
+      <label for="input-field">文字を入力してからエンターキーを押すまでの時間を計測します：</label>
+      <input id="input-field" type="text">
+      <button id="reset-button">リセット</button>
+    </div>
+    <div id="time-display"></div>
+    <div id="best-time-display"></div>
+    <table>
+      <thead>
+        <tr>
+          <th>単語</th>
+          <th>平均入力時間（秒/回）</th>
+        </tr>
+      </thead>
+      <tbody id="results-body"></tbody>
+    </table>
+
+    <script>
+      const inputField = document.getElementById("input-field");
+      const timeDisplay = document.getElementById("time-display");
+      const bestTimeDisplay = document.getElementById("best-time-display");
+      const resultsBody = document.getElementById("results-body");
+      const resetButton = document.getElementById("reset-button");
+      let startTime;
+      let currentTimer;
+      let results = [];
+
+      inputField.addEventListener("keydown", function(event) {
+        if (event.keyCode === 13) {
+          clearInterval(currentTimer);
+          const endTime = new Date().getTime();
+          const elapsedTime = (endTime - startTime) / 1000;
+          const inputValue = inputField.value.trim();
+          const existingResultIndex = results.findIndex(result => result.input === inputValue);
+          if (existingResultIndex !== -1) {
+            const existingResult = results[existingResultIndex];
+            const updatedResult = {
+              input: existingResult.input,
+              time: existingResult.time + elapsedTime,
+              count: existingResult.count + 1,
+            };
+            results[existingResultIndex] = updatedResult;
+          } else {
+            results.push({ input: inputValue, time: elapsedTime, count: 1 });
+          }
+          displayResults();
+          currentTimer = undefined;
+          inputField.value = "";
+        } else {
+          if (!currentTimer) {
+            startTime = new Date().getTime();
+            currentTimer = setInterval(function() {
+              const currentTime = new Date().getTime();
+              const elapsedTime = (currentTime - startTime) / 1000;
+              timeDisplay.innerHTML = `入力時間：${elapsedTime.toFixed(3)}秒`;
+            }, 10);
+          }
+        }
+      });
+
+      resetButton.addEventListener("click", function(event) {
+        clearInterval(currentTimer);
+        inputField.value = "";
+        results = [];
+        displayResults();
+        bestTimeDisplay.innerHTML = "";
+      });
+
+      function displayResults() {
+        resultsBody.innerHTML = "";
+        results.forEach(function(result) {
+          const resultElement = document.createElement("tr");
+          const inputElement = document.createElement("td");
+          inputElement.innerHTML = result.input;
+          const averageTimeElement = document.createElement("td");
+          const averageTime = result.time / result.count;
+          averageTimeElement.innerHTML = averageTime.toFixed(3);
+          resultElement.appendChild(inputElement);
+          resultElement.appendChild(averageTimeElement);
+          resultsBody.appendChild(resultElement);
+        });
+      }
+    </script>
+  </body>
+</html>
